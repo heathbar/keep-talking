@@ -1,0 +1,22 @@
+{
+    "name": "BombControlProtocol",
+    "version": "0.0.1",
+    "description": "Keep talking and no one explodes",
+    "keywords": "Keep talking and no one explodes",
+    "repository":
+    {
+      "type": "git",
+      "url": "https://github.com/heathbar/TBD.git"
+    },
+    "authors":
+    [
+      {
+        "name": "Heath Paddock",
+        "email": "hp@heathpaddock.com",
+        "url": "https://heathpaddock.com"
+      }
+    ],
+    "license": "MIT",
+    "frameworks": "arduino",
+    "platforms": "*"
+  }
