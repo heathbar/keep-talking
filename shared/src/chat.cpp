@@ -87,8 +87,6 @@ bool Chat::receive(ChatMessage* message)
   else if (message->message == MessageType::Debug)
   {
     const short length = message->data;
-    Serial.print("Debug: ");
-    Serial.println(length);
     char buffer[length+1];
     serial->readBytes(buffer, length);
     buffer[length] = NULL;
