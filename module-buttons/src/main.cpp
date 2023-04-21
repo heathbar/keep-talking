@@ -22,7 +22,7 @@ RgbButton buttons[5] = {
 
 bool solves[5] = { false, false, false, false, false };
 bool disarmed = false;
-bool detonated = true;
+bool detonated = false;
 
 void setUniqueRandomAnimations();
 void setTime(short index, short time);
@@ -40,6 +40,11 @@ void setup()
   digitalWrite(STATUS_GRN, HIGH);
   digitalWrite(STATUS_GND, HIGH);
   digitalWrite(STATUS_RED, LOW);
+
+  randomSeed(analogRead(A5));
+
+
+  // setUniqueRandomAnimations();
 }
 
 void loop()
@@ -53,7 +58,6 @@ void loop()
         disarmed = false;
         
         digitalWrite(STATUS_GRN, HIGH);
-        digitalWrite(STATUS_GND, HIGH);
         digitalWrite(STATUS_RED, LOW);
         
         setUniqueRandomAnimations();
@@ -120,7 +124,6 @@ void loop()
       buttons[4].setColor(Color::black);
 
       digitalWrite(STATUS_GRN, LOW);
-      digitalWrite(STATUS_GND, HIGH);
       digitalWrite(STATUS_RED, HIGH);
       
       disarmed = true;
@@ -135,8 +138,6 @@ void loop()
 void setUniqueRandomAnimations()
 {
   const short MAX = 20;
-  
-  randomSeed(analogRead(A5));
   
   short uniqueRandomNumbers[5];
  

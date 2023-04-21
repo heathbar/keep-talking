@@ -319,7 +319,6 @@ RgbButtonEvent RgbButton::handleReleased()
       }
       else
       {
-        chat->debug("strike");
         return RgbButtonEvent::stricken;
       }
     }
