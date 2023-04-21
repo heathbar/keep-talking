@@ -28,8 +28,12 @@ unsigned int counter = 0;
 unsigned int last_counter = 0;
 long last_debounce = millis();
 
-int solutions[] = { 519, 111, 771, 250, 037, 724, 433, 367, 989, 678, 823, 116, 413, 248, 565, 382, 699, 805, 485, 206 };
 int solution;
+int solutions[] = { 
+  519, 111, 771, 805, 250,
+  037, 206, 433, 367, 724,
+  485, 678, 823, 116, 989,
+  413, 248, 565, 382, 699 };
 
 short counter_map[] = { 0, 9, 8, 7, 6, 5, 1, 2, 3, 4 };
 
