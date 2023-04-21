@@ -7,6 +7,7 @@
 class PasswordComponent
 {
 private:
+  bool wait;
   const char* answer;
   PasswordSlice slice1;
   PasswordSlice slice2;

@@ -7,7 +7,8 @@ PasswordComponent::PasswordComponent(const char **args):
   slice1(args[0][0], args[1], 3),
   slice2(args[0][1], args[2], 4),
   slice3(args[0][2], args[3], 5),
-  slice4(args[0][3], args[4], 6)
+  slice4(args[0][3], args[4], 6),
+  wait(true)
 {
 }
 
@@ -17,9 +18,21 @@ void PasswordComponent::mix()
   slice2.mix();
   slice3.mix();
   slice4.mix();
+  wait = false;
 }
+
 bool PasswordComponent::eval(char *buf)
 {
+  if (wait)
+  {
+    buf[0] = 'W';
+    buf[1] = 'A';
+    buf[2] = 'I';
+    buf[3] = 'T';
+    buf[4] = '\0';  
+    return false;
+  }
+
   buf[0] = slice1.eval();
   buf[1] = slice2.eval();
   buf[2] = slice3.eval();

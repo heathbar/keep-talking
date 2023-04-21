@@ -84,7 +84,6 @@ void setup()
   const char **args = database[index];
   password = new PasswordComponent(args);
 
-  reset();
 }
 
 void loop()
@@ -171,10 +170,12 @@ void loop()
 void reset()
 {
   detonated = false;
+  disarmed = false;
   delete password;
   short index = random(27);
   const char **args = database[index];
   password = new PasswordComponent(args);
+  password->mix();
 
   char pass[5];
   while (password->eval(pass))
