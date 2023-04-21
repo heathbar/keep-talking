@@ -11,7 +11,7 @@ SerialNumber::SerialNumber(const char *num, short flgs)
 
 void SerialNumber::randomizeIndicators()
 {
-  short ind = random(9);
+  short ind = random(8);
   flags |= ind << 2;
 
   ctrl = (flags >> 2) & 0x1;

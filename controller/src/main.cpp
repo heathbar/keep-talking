@@ -143,6 +143,9 @@ void setup()
   tone_blocking(695, 500);
   clock->start();
   chat.send(MessageType::Reset, (uint8_t)serialNumber->flags);
+
+  Serial.print("Flags: ");
+  Serial.println(serialNumber->flags, BIN);
 }
 
 
