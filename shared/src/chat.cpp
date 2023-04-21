@@ -52,14 +52,14 @@ bool Chat::receive(ChatMessage* message)
   message->message = (MessageType)buf[1];
   message->data = buf[2];
 
-  // #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-  //   uint8_t print_buf[3];
-  //   print_buf[0] = buf[0] + 48;
-  //   print_buf[1] = buf[1] + 48;
-  //   print_buf[2] = buf[2] + 48;
-  //   Serial.write(print_buf, 3);
-  //   Serial.println();
-  // #endif
+  #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+    uint8_t print_buf[3];
+    print_buf[0] = buf[0] + 48;
+    print_buf[1] = buf[1] + 48;
+    print_buf[2] = buf[2] + 48;
+    Serial.write(print_buf, 3);
+    Serial.println();
+  #endif
 
   if (message->sender == me)
   {

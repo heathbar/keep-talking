@@ -13,6 +13,10 @@ enum class ChatSource {
   Wires,
   Hieroglyphs,
   BinaryCounter,
+  Maze,
+  Keypad,
+  Mastermind,
+  TBD,
   LAST_VALUE
 };
 
