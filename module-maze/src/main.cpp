@@ -4,11 +4,10 @@
 #include <button.h>
 #include "maze.h"
 
-#define STATUS_RED 0 // TBD
-#define STATUS_GRN 0 // TBD
-#define STATUS_GND 0 // TBD
+#define STATUS_RED A0
+#define STATUS_GRN A1
 
-Chat chat(ChatSource::Buttons);
+Chat chat(ChatSource::Maze);
 ChatMessage msg;
 
 const uint16_t PixelCount = 64;
@@ -25,8 +24,8 @@ RgbColor purple(colorSaturation / 2, 0, colorSaturation / 2);
 
 RgbColor black(0);
 
-Button up(4);
-Button left(5);
+Button left(4);
+Button up(5);
 Button down(6);
 Button right(7);
 
@@ -82,7 +81,7 @@ void loop()
 
     if (up.isPressed())
     {
-      if (is_move_allowed(N))
+      if (maze.is_move_allowed(player, N))
       {
         player.y -= 1;
       }
@@ -95,7 +94,7 @@ void loop()
 
     if (left.isPressed())
     {
-      if (is_move_allowed(W))
+      if (maze.is_move_allowed(player, W))
       {
         player.x -= 1;
       }
@@ -108,7 +107,7 @@ void loop()
 
     if (down.isPressed())
     {
-      if (is_move_allowed(S))
+      if (maze.is_move_allowed(player, S))
       {
         player.y += 1;
       }
@@ -121,7 +120,7 @@ void loop()
 
     if (right.isPressed())
     {
-      if (is_move_allowed(E))
+      if (maze.is_move_allowed(player, E))
       {
         player.x += 1;
       }

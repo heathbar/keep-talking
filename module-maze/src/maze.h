@@ -24,6 +24,26 @@ struct Maze {
   Element marker1;
   Element marker2;
   short walls[64];
+
+  short getWalls(short x, short y)
+  {
+    return walls[x + y * 8];
+  }
+
+  bool is_move_allowed(Element from, Walls dir)
+  {
+    short walls = getWalls(from.x, from.y);
+
+    if (walls & dir)
+    {
+      return false;
+    }
+    else
+    {
+      return true;
+    }
+  }
+
 };
 
 bool are_same_location(Element e1, Element e2)
@@ -31,24 +51,6 @@ bool are_same_location(Element e1, Element e2)
   return e1.x == e2.x && e1.y == e2.y;
 }
 
-short getWalls(short x, short y)
-{
-  return maze.walls[x + y * 8];
-}
-
-bool is_move_allowed(Walls dir)
-{
-  short walls = getWalls(player.x, player.y);
-
-  if (walls & dir)
-  {
-    return false;
-  }
-  else
-  {
-    return true;
-  }
-}
 
 Maze mazes[6] = {
 
