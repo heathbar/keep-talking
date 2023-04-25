@@ -4,14 +4,16 @@
 #include <button.h>
 #include "maze.h"
 
-#define STATUS_RED A0
-#define STATUS_GRN A1
+#define VCC 2
+#define GND 8
+#define STATUS_RED 10
+#define STATUS_GRN 11
 
 Chat chat(ChatSource::Maze);
 ChatMessage msg;
 
 const uint16_t PixelCount = 64;
-const uint8_t PixelPin = 2;
+const uint8_t PixelPin = 3;
 
 #define colorSaturation 5
 
@@ -47,8 +49,16 @@ void setup()
 {
   chat.begin();
 
+  pinMode(VCC, OUTPUT);
+  pinMode(GND, OUTPUT);
+  pinMode(STATUS_RED, OUTPUT);
+  pinMode(STATUS_GRN, OUTPUT);
+
+  digitalWrite(VCC, HIGH);
+  digitalWrite(GND, LOW);
+
   randomSeed(analogRead(A5));
-  reset();
+  // reset();
 
   strip.Begin();
   strip.Show();
@@ -69,6 +79,7 @@ void loop()
         for (int i = 0; i < 10; i++) {
           flash(red);
           delay(50);
+          detonated = true;
         }
         break;
     }
