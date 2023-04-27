@@ -33,22 +33,46 @@ bool indicatorCtrl = 0;
 bool indicatorAlt = 0;
 bool indicatorEtp = 0;
 
-SerialNumber serialNumbers[12] = {
-  { "7EV9164428", SN_CONTAINS_VOWEL                     },
-  { "2C3P061A93", SN_CONTAINS_VOWEL | SN_LAST_DIGIT_ODD },
-  { "1972S686R2", 0                                     },
-  { "MCJ11757X5",                     SN_LAST_DIGIT_ODD },
-  { "7VR2D228A2", SN_CONTAINS_VOWEL                     },
-  { "J22ETH4NP9", SN_CONTAINS_VOWEL | SN_LAST_DIGIT_ODD },
-  { "FEV91662L4", SN_CONTAINS_VOWEL                     },
-  { "231JR0M4N7",                     SN_LAST_DIGIT_ODD },
-  { "1R0NXM4N98", 0                                     },
-  { "MN1U297F71", SN_CONTAINS_VOWEL | SN_LAST_DIGIT_ODD },
+SerialNumber serialNumbers[32] = {
+  { "249X7N27N2", 0                                     },
+  { "29V7NV6J62", 0                                     },
+  { "PNKPSC4774", 0                                     },
+  { "1972S686R4", 0                                     },
+  { "CDCM2B4AM6", 0                                     },
+  { "1XKFQ859I6", 0                                     },
   { "K8F6287346", 0                                     },
-  { "10T4C0S4M3",                     SN_LAST_DIGIT_ODD }
+  { "CW65F4DTX6", 0                                     },
+  
+  { "1RONXM4NE8", SN_CONTAINS_VOWEL                     },
+  { "VS0B42D7I4", SN_CONTAINS_VOWEL                     },
+  { "SS4YU75BY8", SN_CONTAINS_VOWEL                     },
+  { "7EV9164428", SN_CONTAINS_VOWEL                     },
+  { "7VR2D228A2", SN_CONTAINS_VOWEL                     },
+  { "FEV91662L8", SN_CONTAINS_VOWEL                     },
+  { "45PQ4E81Q2", SN_CONTAINS_VOWEL                     },
+  { "50NFJGDI44", SN_CONTAINS_VOWEL                     },
+
+  { "MCJ11757X5",                     SN_LAST_DIGIT_ODD },
+  { "231JR0M4N7",                     SN_LAST_DIGIT_ODD },
+  { "10T4C0S4M3",                     SN_LAST_DIGIT_ODD },
+  { "7H7TL5ZN85",                     SN_LAST_DIGIT_ODD },
+  { "V92NGTP629",                     SN_LAST_DIGIT_ODD },
+  { "55QX395ES7",                     SN_LAST_DIGIT_ODD },
+  { "FR39CZ6299",                     SN_LAST_DIGIT_ODD },
+  { "SR43WK6PR1",                     SN_LAST_DIGIT_ODD },
+
+  { "MN1U297F71", SN_CONTAINS_VOWEL | SN_LAST_DIGIT_ODD },
+  { "2C3P061A93", SN_CONTAINS_VOWEL | SN_LAST_DIGIT_ODD },
+  { "D24ETH4NP5", SN_CONTAINS_VOWEL | SN_LAST_DIGIT_ODD },
+  { "N9JZI7H3I3", SN_CONTAINS_VOWEL | SN_LAST_DIGIT_ODD },
+  { "NQA38EZ307", SN_CONTAINS_VOWEL | SN_LAST_DIGIT_ODD },
+  { "H71AKRRF49", SN_CONTAINS_VOWEL | SN_LAST_DIGIT_ODD },
+  { "EW8J992OC7", SN_CONTAINS_VOWEL | SN_LAST_DIGIT_ODD },
+  { "4N9WYRA9P3", SN_CONTAINS_VOWEL | SN_LAST_DIGIT_ODD }
+
 };
 
-const SerialNumber *serialNumber;
+SerialNumber *serialNumber;
 
 void detonate();
 void disarm();
@@ -81,7 +105,15 @@ void setup()
   digitalWrite(STRIKE2, LOW);
   digitalWrite(STRIKE3, LOW);
 
-  randomSeed(analogRead(A3));
+  randomSeed(analogRead(A5));
+
+  // it seems to provide better randomization
+  // when you get a couple out of the way
+  random(10);
+  random(100);
+  random(1000);
+  random(10000);
+
   serialNumber = &serialNumbers[random(12)];
   serialNumber->randomizeIndicators();
 
@@ -253,7 +285,8 @@ void detonate()
     oled.clearDisplay();
 
     // one last refresh to clear out any ms
-    clock->refresh();
+    // this causes an extra "tick" which seems to not be necessary
+    // clock->refresh();
 
     while(1);
   }
@@ -262,6 +295,7 @@ void detonate()
 
 void disarm()
 {
+  chat.send(MessageType::Win);
   levelClear();
   while(1);
 }
