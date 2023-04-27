@@ -53,6 +53,8 @@ short solution_scrambled[4];
 short solution_index = 0;
 bool disarmed = false;
 bool detonated = false;
+bool won = false;
+long randomSeedAnalog;
 
 void draw(short pos, Glyph glyph, uint16_t color);
 void scramble(short *input, short *output);
@@ -68,7 +70,7 @@ void setup(void) {
   tft.fillScreen(BLACK);
 
   pinMode(A5, INPUT);
-  randomSeed(analogRead(A5));
+  randomSeedAnalog = analogRead(A5);
 
   pinMode(STATUS_RED, OUTPUT);
   pinMode(STATUS_GRN, OUTPUT);
@@ -82,58 +84,63 @@ void loop(void) {
 
   if (chat.receive(&msg))
   {
-    if (msg.message == MessageType::Reset)
-    {
-      reset();
-    }
-    else if (msg.message == MessageType::Detonate)
-    {
-      detonated = true;
+    switch (msg.message) {
+      case MessageType::Reset:
+        randomSeed(randomSeedAnalog * msg.data);
+        reset();
+        break;
+
+      case MessageType::Detonate:
+        detonated = true;
       
-      tft.fillScreen(RED);
+        tft.fillScreen(RED);
 
-      tft.fillRect(42, 92, 156, 60, BLACK);
-      tft.drawRect(42, 92, 156, 60, WHITE);
-      tft.setCursor(77, 100);
-      tft.setTextSize(2);
-      tft.setTextColor(WHITE);
-      tft.println("SAD DAY");
+        tft.fillRect(42, 92, 156, 60, BLACK);
+        tft.drawRect(42, 92, 156, 60, WHITE);
+        tft.setCursor(77, 100);
+        tft.setTextSize(2);
+        tft.setTextColor(WHITE);
+        tft.println("SAD DAY");
 
-      tft.setCursor(55, 125);
-      tft.setTextColor(RED);
-      tft.setTextSize(3);
-      tft.println("FOR YOU");
+        tft.setCursor(55, 125);
+        tft.setTextColor(RED);
+        tft.setTextSize(3);
+        tft.println("FOR YOU");
 
-      // tft.setCursor(0, 75);
-      // tft.setTextSize(1);
-      // tft.setTextColor(WHITE);
+        // tft.setCursor(0, 75);
+        // tft.setTextSize(1);
+        // tft.setTextColor(WHITE);
 
-      // PGM_P const *movie = (PGM_P const *)pgm_read_dword(&(shows[x]));
+        // PGM_P const *movie = (PGM_P const *)pgm_read_dword(&(shows[x]));
 
-      // for (int i = 1; i < 7; i++) {
+        // for (int i = 1; i < 7; i++) {
 
-      //   char buffer[strlen_P(movie[i])];
-      //   strcpy_P(buffer, (char*)pgm_read_dword(&(movie[i])));
-      //   tft.println(buffer);
-      // }
+        //   char buffer[strlen_P(movie[i])];
+        //   strcpy_P(buffer, (char*)pgm_read_dword(&(movie[i])));
+        //   tft.println(buffer);
+        // }
 
-      // tft.println();
-      // tft.println();
+        // tft.println();
+        // tft.println();
 
-      // tft.setTextColor(0xCE79);
-      // tft.println(" From the movie ");
-      // tft.println();
+        // tft.setTextColor(0xCE79);
+        // tft.println(" From the movie ");
+        // tft.println();
 
-      // tft.setTextColor(GREEN);
-      // char title[strlen_P(movie[0])];
-      // strcpy_P(title, (char*)pgm_read_dword(&(movie[0])));
-      // tft.println(title);
-      // tft.println();
-      
+        // tft.setTextColor(GREEN);
+        // char title[strlen_P(movie[0])];
+        // strcpy_P(title, (char*)pgm_read_dword(&(movie[0])));
+        // tft.println(title);
+        // tft.println();
+
+      case MessageType::Win:
+        won = true;
+        break;
+
     }
   }
 
-  if (!disarmed && !detonated)
+  if (!disarmed && !detonated && !won)
   {
     for (short i = 0; i < 4; i++)
     {
@@ -256,7 +263,7 @@ void scramble(short *input, short *output)
 
 void reset()
 {
-  tft.fillScreen(BLACK                      );
+  tft.fillScreen(BLACK);
 
   // select a random group
   Glyph *group = glyph_groups[random(6)];
@@ -288,4 +295,5 @@ void reset()
   solution_index = 0;
   disarmed = false;
   detonated = false;
+  won = false;
 }
