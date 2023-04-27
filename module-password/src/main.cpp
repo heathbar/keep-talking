@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h> // TODO: determine why this is necessary
 #include <Wire.h>
 #include <SparkFun_Alphanumeric_Display.h>
 #include "password-component.h"
@@ -34,7 +33,7 @@ const char *database[][5] = {
     {"HIGH", "STWAU", "DHOFL", "FHIJK", "OMBAN"},
     {"HEAR", "YNAFJ", "KRONZ", "CLIQU", "HMAET"},
     {"HELP", "FNIRT", "OSJDW", "HKMPR", "UWEBT"},
-    {"LAMB", "KODER", "TUVWB", "SNAPY", "CDEFG"},
+    {"LAMB", "KODER", "TUVWB", "SNACY", "CDEFG"},
     {"LEAP", "MOREF", "YTCKV", "BARED", "COGAN"},
     {"MELT", "SNACK", "LUNCH", "BFAST", "DINER"},
     {"MINE", "SLXOU", "UVRYC", "AMPIJ", "LBRAD"},
