@@ -5,7 +5,7 @@
 
 const int brightness = 5;
 
-enum Walls
+enum Direction
 {
   N = 1 << 0,
   S = 1 << 1,
@@ -30,7 +30,7 @@ struct Maze {
     return walls[x + y * 8];
   }
 
-  bool is_move_allowed(Element from, Walls dir)
+  bool is_move_allowed(Element from, Direction dir)
   {
     short walls = getWalls(from.x, from.y);
 

@@ -8,21 +8,20 @@
 #define GND 8
 #define STATUS_RED 10
 #define STATUS_GRN 11
+#define PIXEL_PIN 3
+#define BRIGHTNESS 5
+
+const uint16_t PixelCount = 64;
 
 Chat chat(ChatSource::Maze);
 ChatMessage msg;
 
-const uint16_t PixelCount = 64;
-const uint8_t PixelPin = 3;
+NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PIXEL_PIN);
 
-#define colorSaturation 5
-
-NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
-
-RgbColor red(colorSaturation, 0, 0);
-RgbColor green(0, colorSaturation, 0);
-RgbColor blue(0, 0, colorSaturation);
-RgbColor purple(colorSaturation / 2, 0, colorSaturation / 2);
+RgbColor red(BRIGHTNESS, 0, 0);
+RgbColor green(0, BRIGHTNESS, 0);
+RgbColor blue(0, 0, BRIGHTNESS);
+RgbColor purple(BRIGHTNESS / 2, 0, BRIGHTNESS / 2);
 
 RgbColor black(0);
 
@@ -31,15 +30,14 @@ Button up(5);
 Button down(6);
 Button right(7);
 
-Element player = { 0, 0, blue };
-Element goal   = { 0, 0, red };
+Element player = { -1, -1, blue };
+Element goal   = { -2, -2, red };
 
 Maze maze;
 
-short winIndex = 10;
-
 bool disarmed = false;
 bool detonated = false;
+bool won = false;
 
 void reset();
 void draw(Element e);
@@ -51,17 +49,22 @@ void setup()
 
   pinMode(VCC, OUTPUT);
   pinMode(GND, OUTPUT);
+  
   pinMode(STATUS_RED, OUTPUT);
   pinMode(STATUS_GRN, OUTPUT);
 
   digitalWrite(VCC, HIGH);
   digitalWrite(GND, LOW);
 
-  randomSeed(analogRead(A5));
-  // reset();
+  digitalWrite(STATUS_GRN, LOW);
+  digitalWrite(STATUS_RED, HIGH);
 
   strip.Begin();
   strip.Show();
+
+  randomSeed(analogRead(A5));
+
+  // reset();
 }
 
 void loop()
@@ -82,10 +85,14 @@ void loop()
           detonated = true;
         }
         break;
+
+      case MessageType::Win:
+        won = true;
+        break;
     }
   }
 
-  if (!disarmed && !detonated)
+  if (!disarmed && !detonated && !won)
   {
     draw(maze.marker1);
     draw(maze.marker2);
@@ -163,7 +170,6 @@ void loop()
     }
   }
   
-  
   strip.Show();
 }
 
@@ -183,6 +189,7 @@ void reset()
 
   detonated = false;
   disarmed = false;
+  won = false;
 
   digitalWrite(STATUS_GRN, LOW);
   digitalWrite(STATUS_RED, HIGH);
