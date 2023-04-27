@@ -32,6 +32,8 @@ enum class MessageType
   Time2,
   Time3,
   Time4,
+  Win,
+  Quote,
   LAST_VALUE
 };
 
@@ -51,12 +53,12 @@ struct ChatMessage
 };
 
 
-
 class Chat
 {
   private:
     short me;
     HardwareSerial *serial;
+    bool handleDebugMessage(ChatMessage *msg);
 
   public:
     Chat(ChatSource id);
@@ -67,4 +69,3 @@ class Chat
 };
 
 #endif
-

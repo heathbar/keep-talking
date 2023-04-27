@@ -29,13 +29,20 @@ void Chat::send(MessageType message, uint8_t data)
   buf[1] = (short)message;
   buf[2] = data;
 
-  #ifdef USB_DEBUG
+  serial->write(buf, 3);
+
+  #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+
     buf[0] += 48;
     buf[1] += 48;
     buf[2] += 48;
-  #endif
 
-  serial->write(buf, 3);
+    Serial.print("->");
+    Serial.write(buf, 3);
+    Serial.println();
+
+  #endif
+  
 }
 
 bool Chat::receive(ChatMessage* message)
@@ -57,11 +64,24 @@ bool Chat::receive(ChatMessage* message)
     print_buf[0] = buf[0] + 48;
     print_buf[1] = buf[1] + 48;
     print_buf[2] = buf[2] + 48;
+
+    Serial.print("<-");
     Serial.write(print_buf, 3);
     Serial.println();
   #endif
 
-  if (message->sender == me)
+
+  // If it's a debug message, sent by me, drain the bytes from the queue
+  if (message->message == MessageType::Debug)
+  {
+    // forward the initial message
+    serial->write(buf, 3);
+
+    // process the extra data
+    return handleDebugMessage(message);
+  }
+
+  else if (message->sender == me)
   {
     return false;
   }
@@ -82,26 +102,38 @@ bool Chat::receive(ChatMessage* message)
     return false;
   }
 
-  #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-
-  else if (message->message == MessageType::Debug)
-  {
-    const short length = message->data;
-    char buffer[length+1];
-    serial->readBytes(buffer, length);
-    buffer[length] = NULL;
-    Serial.print(message->sender);
-    Serial.print(": ");
-    Serial.println(buffer);
-    return false;
-  }
-
-  #endif
-
   // forward message
   serial->write(buf, 3);
 
   return true;  
+}
+
+bool Chat::handleDebugMessage(ChatMessage *message)
+{
+  const short length = message->data;
+  char buffer[length+1];
+  serial->readBytes(buffer, length);
+  
+  if (message->sender == me)
+  {
+    return false;
+  }
+
+  // forward the debug data
+  serial->write(buffer, length);
+
+  #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+
+  // terminate the string so it prints nicely
+  buffer[length] = NULL;
+
+  Serial.print(message->sender);
+  Serial.print(": ");
+  Serial.println(buffer);
+
+  #endif
+
+  return false;
 }
 
 void Chat::debug(String s)
