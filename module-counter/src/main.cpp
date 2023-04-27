@@ -23,6 +23,7 @@ ChatMessage msg;
 
 bool disarmed = false;
 bool detonated = false;
+bool won = false;
 
 unsigned int counter = 0;
 unsigned int last_counter = 0;
@@ -31,7 +32,7 @@ long last_debounce = millis();
 int solution;
 int solutions[] = { 
   519, 111, 771, 805, 250,
-  037, 206, 433, 367, 724,
+  37, 206, 433, 367, 724,
   485, 678, 823, 116, 989,
   413, 248, 565, 382, 699 };
 
@@ -43,6 +44,10 @@ void disarm();
 
 void reset()
 {
+  bool disarmed = false;
+  bool detonated = false;
+  bool won = false;
+
   digitalWrite(STATUS_RED, HIGH);
   digitalWrite(STATUS_GRN, LOW);
 
@@ -77,7 +82,10 @@ void setup()
 
   digitalWrite(VCC, HIGH);
 
-  reset();
+  digitalWrite(STATUS_RED, HIGH);
+  digitalWrite(STATUS_GRN, LOW);
+
+  // reset();
 }
 
 void loop()
@@ -85,17 +93,23 @@ void loop()
 
   if (chat.receive(&msg)) 
   {
-    if (msg.message == MessageType::Reset)
+    switch (msg.message)
     {
-      reset();
-    }
-    else if (msg.message == MessageType::Detonate)
-    {
-      detonated = true;
+      case MessageType::Reset:
+        reset();
+        break;
+    
+      case MessageType::Detonate:
+        detonated = true;
+        break;
+
+      case MessageType::Win:
+        won = true;
+        break;
     }
   }
 
-  if (!detonated && !disarmed)
+  if (!detonated && !disarmed && !won)
   {
     counter = refresh(solution, counter);
     delay(10);
