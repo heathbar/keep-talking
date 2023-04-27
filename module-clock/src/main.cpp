@@ -35,6 +35,7 @@ ChatMessage msg;
 short puzzle;
 bool detonated = false;
 bool disarmed = false;
+bool won = false;
 bool vowel = false;
 bool ctrl = false;
 bool alt = false;
@@ -44,11 +45,10 @@ short strikes = 0;
 short clock_minutes = -1;
 
 RgbColor colors[4] = {
-  RgbColor(0),
-  RgbColor(BRIGHTNESS, 0, 0),
-  RgbColor(0, BRIGHTNESS, 0),
-  RgbColor(0, 0, BRIGHTNESS)
-};
+    RgbColor(0),
+    RgbColor(BRIGHTNESS, 0, 0),
+    RgbColor(0, BRIGHTNESS, 0),
+    RgbColor(0, 0, BRIGHTNESS)};
 
 Hand secondHand(BTN_SC, ENC_0_CLK, ENC_0_DAT, colors[1], 2);
 Hand minuteHand(BTN_MN, ENC_1_CLK, ENC_1_DAT, colors[2], 1);
@@ -89,17 +89,17 @@ const short init_times[][3] = {
 };
 
 
-
 short submission[3] = { -1, -1, -1 };
 
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PIXEL_COUNT, LED_DATA_PIN);
 
 void strike();
-void promote(Light * light);
+void promote(Light *light);
 
-void setup() {
+void setup()
+{
 
-// temporary
+  // temporary
   pinMode(LED_GND_PIN, OUTPUT);
   pinMode(LED_VCC_PIN, OUTPUT);
   digitalWrite(LED_GND_PIN, LOW);
@@ -107,10 +107,10 @@ void setup() {
 
   pinMode(STATUS_RED, OUTPUT);
   pinMode(STATUS_GRN, OUTPUT);
-  
+
   digitalWrite(STATUS_RED, HIGH);
   digitalWrite(STATUS_GRN, LOW);
-  
+
   chat.begin();
   strip.Begin();
 
@@ -123,47 +123,55 @@ void setup() {
   hourHand.setTime(init_times[puzzle][2]);
 }
 
-
-void loop() {
+void loop()
+{
 
   if (chat.receive(&msg))
   {
-    if (msg.message == MessageType::Reset)
+    switch (msg.message)
     {
-      detonated = false;
-      disarmed = false;
-      puzzle = random(24);
-      vowel = msg.data & SN_CONTAINS_VOWEL;
-      ctrl = msg.data & IND_CTRL;
-      alt = msg.data & IND_ALT;
-      etp = msg.data & IND_ETP;
+      case MessageType::Reset:
+        detonated = false;
+        disarmed = false;
+        won = false;
+        puzzle = random(24);
+        vowel = msg.data & SN_CONTAINS_VOWEL;
+        ctrl = msg.data & IND_CTRL;
+        alt = msg.data & IND_ALT;
+        etp = msg.data & IND_ETP;
+        strikes = 0;
 
-      digitalWrite(STATUS_RED, HIGH);
-      digitalWrite(STATUS_GRN, LOW);
+        digitalWrite(STATUS_RED, HIGH);
+        digitalWrite(STATUS_GRN, LOW);
 
-      strip.ClearTo(colors[0]);
+        strip.ClearTo(colors[0]);
 
-      secondHand.setTime(init_times[puzzle][0]);
-      minuteHand.setTime(init_times[puzzle][1]);
-      hourHand.setTime(init_times[puzzle][2]);
+        secondHand.setTime(init_times[puzzle][0]);
+        minuteHand.setTime(init_times[puzzle][1]);
+        hourHand.setTime(init_times[puzzle][2]);
+        break;
 
-    }
-    else if (msg.message == MessageType::Time2)
-    {
-      clock_minutes = msg.data;
-    }
-    else if (msg.message == MessageType::Strike)
-    {
-      strikes++;
-    }
-    else if (msg.message == MessageType::Detonate)
-    {
-      detonated = true;
-      strip.ClearTo(colors[1]);
+      case MessageType::Time2:
+        clock_minutes = msg.data;
+        break;
+
+      case MessageType::Strike:
+        strikes++;
+        break;
+
+      case MessageType::Detonate:
+        detonated = true;
+        strip.ClearTo(colors[1]);
+        break;
+
+      case MessageType::Win:
+        won = true;
+        break;
+
     }
   }
 
-  if (!detonated && !disarmed)
+  if (!detonated && !disarmed && !won)
   {
     strip.ClearTo(colors[0]);
 
@@ -189,18 +197,18 @@ void loop() {
     strip.SetPixelColor(hands[2]->getValue(), hands[2]->getColor());
     strip.SetPixelColor(hands[1]->getValue(), hands[1]->getColor());
     strip.SetPixelColor(hands[0]->getValue(), hands[0]->getColor());
-    
+
     if (submitButton.isReleased())
     {
-      const short initialBlue = init_times[puzzle][2] + 1;  // plus one because clocks are not zero-based like arrays
-      const short submitBlue = (hourHand.getValue() + 1) % 12;    // plus one because clocks are not zero-based like arrays
+      const short initialBlue = init_times[puzzle][2] + 1;     // plus one because clocks are not zero-based like arrays
+      const short submitBlue = (hourHand.getValue() + 1) % 12; // plus one because clocks are not zero-based like arrays
 
-      const short initialGreen = init_times[puzzle][1] + 1; // plus one because clocks are not zero-based like arrays
-      const short submitGreen = (minuteHand.getValue() + 1) % 12;   // plus one because clocks are not zero-based like arrays
+      const short initialGreen = init_times[puzzle][1] + 1;       // plus one because clocks are not zero-based like arrays
+      const short submitGreen = (minuteHand.getValue() + 1) % 12; // plus one because clocks are not zero-based like arrays
 
-      const short initialRed = init_times[puzzle][0] + 1;   // plus one because clocks are not zero-based like arrays
-      const short submitRed = (secondHand.getValue() + 1) % 12;     // plus one because clocks are not zero-based like arrays
-     
+      const short initialRed = init_times[puzzle][0] + 1;       // plus one because clocks are not zero-based like arrays
+      const short submitRed = (secondHand.getValue() + 1) % 12; // plus one because clocks are not zero-based like arrays
+
       //  HOUR HAND
 
       if (initialBlue < 5)
@@ -284,7 +292,7 @@ void loop() {
       {
         return strike();
       }
-    
+
       disarmed = true;
       chat.send(MessageType::Disarm);
 
@@ -296,7 +304,7 @@ void loop() {
         delay(150);
         strip.ClearTo(colors[2]);
         strip.Show();
- 
+
         delay(150);
         strip.ClearTo(colors[0]);
         strip.Show();
@@ -310,11 +318,12 @@ void loop() {
       hourHand.setTime(init_times[puzzle][2]);
     }
   }
- 
+
   strip.Show();
 }
 
 void strike()
 {
   chat.send(MessageType::Strike);
+  strikes++;
 }
