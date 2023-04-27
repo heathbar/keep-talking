@@ -23,6 +23,7 @@ RgbButton buttons[5] = {
 bool solves[5] = { false, false, false, false, false };
 bool disarmed = false;
 bool detonated = false;
+bool won = false;
 
 void setUniqueRandomAnimations();
 void setTime(short index, short time);
@@ -56,6 +57,7 @@ void loop()
       case MessageType::Reset:
         detonated = false;
         disarmed = false;
+        won = false;
         
         digitalWrite(STATUS_GRN, HIGH);
         digitalWrite(STATUS_RED, LOW);
@@ -70,6 +72,9 @@ void loop()
         buttons[3].setColor(Color::red);
         buttons[4].setColor(Color::red);
         break;
+      case MessageType::Win:
+        won = true;
+        break; 
       case MessageType::Time1:
         setTime(0, msg.data);
         break;
@@ -85,8 +90,7 @@ void loop()
     }
   }
 
-
-  if (!disarmed && !detonated)
+  if (!disarmed && !detonated && !won)
   {
     RgbButtonEvent status[5] =
     {
