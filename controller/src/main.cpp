@@ -331,7 +331,7 @@ void setDifficulty(short d)
       Serial.println("Normal Difficulty");
       break;
     case DIFFICULTY_HEROIC:
-      duration = 480; // EIGHT MINUTES
+      duration = 360; // EIGHT MINUTES
       moduleCount = 9;
       noFailMode = false;
       oled.println("Heroic Difficulty...");
