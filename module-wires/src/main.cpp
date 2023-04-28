@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <chat.h>
+#include <patient-chat.h>
 #include <serial-number-flags.h>
 #include "sensor_group.h"
 #include "wire.h"
@@ -8,13 +8,19 @@
 #define STATUS_RED 12
 #define STATUS_GRN 13
 
+// The next module in the chain is Maze which uses NeoPixelBus which notoriously drops 
+// packets. So we have implemented a RTS/CTS system called PatientChat to make sure 
+// Maze is ready to receive before we send any messages.
+#define RTS 2
+#define CTS 3
+
 bool disarmed = false;
 bool detonated = false;
 bool last_digit_odd = false;
 
 SensorGroup sensors;
 
-Chat chat(ChatSource::Wires);
+PatientChat chat(ChatSource::Wires, RTS, CTS);
 ChatMessage msg;
 
 
@@ -25,7 +31,7 @@ void setup()
   pinMode(STATUS_GND, OUTPUT);
   pinMode(STATUS_RED, OUTPUT);
   pinMode(STATUS_GRN, OUTPUT);
-
+  
   digitalWrite(STATUS_GND, LOW);
   digitalWrite(STATUS_RED, HIGH);
   digitalWrite(STATUS_GRN, LOW);

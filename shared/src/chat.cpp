@@ -1,8 +1,7 @@
 #include <Arduino.h>
 #include "chat.h"
 
-// Uncomment to adjust serial output format
-// #define USB_DEBUG 1
+#define MESSAGE_HEADER 30
 
 Chat::Chat(ChatSource id)
 {
@@ -24,21 +23,21 @@ void Chat::begin()
 
 void Chat::send(MessageType message, uint8_t data)
 {
-  uint8_t buf[3];
-  buf[0] = me;
-  buf[1] = (short)message;
-  buf[2] = data;
-
-  serial->write(buf, 3);
+  uint8_t buf[4] = { MESSAGE_HEADER, me, (short)message, data };
+  write(buf, 4);
 
   #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 
-    buf[0] += 48;
-    buf[1] += 48;
-    buf[2] += 48;
+    // Convert to printable characters
+    uint8_t print_buf[4] = {
+      buf[0] + 94,
+      buf[1] + 48,
+      buf[2] + 48,
+      buf[3] + 48
+    };
 
     Serial.print("->");
-    Serial.write(buf, 3);
+    Serial.write(print_buf, 4);
     Serial.println();
 
   #endif
@@ -47,26 +46,37 @@ void Chat::send(MessageType message, uint8_t data)
 
 bool Chat::receive(ChatMessage* message)
 {
-  if (serial->available() < 3)
+  if (serial->available() < 4)
   {
     return false;
   }
 
-  uint8_t buf[3];
-  serial->readBytes(buf, 3);
+  uint8_t buf[4];
+  serial->readBytes(buf, 4);
 
-  message->sender = buf[0];
-  message->message = (MessageType)buf[1];
-  message->data = buf[2];
+  if (buf[0] != MESSAGE_HEADER)
+  {
+    debug("RECOVER!\n" + String(buf[0]) + String(buf[1]) + String(buf[2]) + String(buf[3]));
+    if (!recover(buf))
+    {
+      return false;
+    }
+  }
+
+  message->sender = buf[1];
+  message->message = (MessageType)buf[2];
+  message->data = buf[3];
 
   #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-    uint8_t print_buf[3];
-    print_buf[0] = buf[0] + 48;
-    print_buf[1] = buf[1] + 48;
-    print_buf[2] = buf[2] + 48;
+    uint8_t print_buf[4] = {
+      buf[0] + 94,
+      buf[1] + 48,
+      buf[2] + 48,
+      buf[3] + 48
+    };
 
     Serial.print("<-");
-    Serial.write(print_buf, 3);
+    Serial.write(print_buf, 4);
     Serial.println();
   #endif
 
@@ -75,7 +85,7 @@ bool Chat::receive(ChatMessage* message)
   if (message->message == MessageType::Debug)
   {
     // forward the initial message
-    serial->write(buf, 3);
+    write(buf, 4);
 
     // process the extra data
     return handleDebugMessage(message);
@@ -103,7 +113,7 @@ bool Chat::receive(ChatMessage* message)
   }
 
   // forward message
-  serial->write(buf, 3);
+  write(buf, 4);
 
   return true;  
 }
@@ -120,7 +130,7 @@ bool Chat::handleDebugMessage(ChatMessage *message)
   }
 
   // forward the debug data
-  serial->write(buffer, length);
+  write(buffer, length);
 
   #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 
@@ -138,6 +148,31 @@ bool Chat::handleDebugMessage(ChatMessage *message)
 
 void Chat::debug(String s)
 {
+  #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+  
+  Serial.print(s);
+  return;
+
+  #endif
+
   send(MessageType::Debug, s.length());
   Serial.print(s);
+}
+
+bool Chat::recover(uint8_t *buf)
+{
+  while (buf[0] != MESSAGE_HEADER && serial->available())
+  {
+    buf[0] = buf[1];
+    buf[1] = buf[2];
+    buf[2] = buf[3];
+    buf[3] = serial->read();
+  }
+
+  return buf[0] == MESSAGE_HEADER;
+}
+
+void Chat::write(uint8_t *buf, int len)
+{
+  serial->write(buf, len);
 }

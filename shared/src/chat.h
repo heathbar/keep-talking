@@ -59,6 +59,10 @@ class Chat
     short me;
     HardwareSerial *serial;
     bool handleDebugMessage(ChatMessage *msg);
+    bool recover(uint8_t *buf);
+  
+  protected:
+    virtual void write(uint8_t *buf, int len);
 
   public:
     Chat(ChatSource id);
@@ -66,6 +70,7 @@ class Chat
     void send(MessageType message, uint8_t data = 0);
     bool receive(ChatMessage* message);
     void debug(String s);
+    void reset();
 };
 
 #endif

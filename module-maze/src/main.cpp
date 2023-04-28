@@ -8,6 +8,8 @@
 #define GND 8
 #define STATUS_RED 10
 #define STATUS_GRN 11
+#define RTS 12
+#define CTS 13
 #define PIXEL_PIN 3
 #define BRIGHTNESS 5
 
@@ -53,11 +55,16 @@ void setup()
   pinMode(STATUS_RED, OUTPUT);
   pinMode(STATUS_GRN, OUTPUT);
 
+  pinMode(RTS, INPUT);
+  pinMode(CTS, OUTPUT);
+
   digitalWrite(VCC, HIGH);
   digitalWrite(GND, LOW);
 
   digitalWrite(STATUS_GRN, LOW);
   digitalWrite(STATUS_RED, HIGH);
+
+  digitalWrite(CTS, LOW);
 
   strip.Begin();
   strip.Show();
@@ -71,26 +78,36 @@ void loop()
 {
   strip.ClearTo(black);
 
-  if (chat.receive(&msg))
+  if (digitalRead(RTS) == HIGH)
   {
-    switch (msg.message)
-    {
-      case MessageType::Reset:
-        reset();
-        break;
-      case MessageType::Detonate:
-        for (int i = 0; i < 10; i++) {
-          flash(red);
-          delay(50);
-          detonated = true;
-        }
-        break;
+    digitalWrite(CTS, HIGH);
+    
+    // wait for sender to get us some bits
+    delay(5);
+    digitalWrite(CTS, LOW);
 
-      case MessageType::Win:
-        won = true;
-        break;
+    while (chat.receive(&msg))
+    {
+      switch (msg.message)
+      {
+        case MessageType::Reset:
+          reset();
+          break;
+        case MessageType::Detonate:
+          for (int i = 0; i < 10; i++) {
+            flash(red);
+            delay(50);
+            detonated = true;
+          }
+          break;
+
+        case MessageType::Win:
+          won = true;
+          break;
+      }
     }
   }
+
 
   if (!disarmed && !detonated && !won)
   {
@@ -169,7 +186,7 @@ void loop()
       }
     }
   }
-  
+
   strip.Show();
 }
 
