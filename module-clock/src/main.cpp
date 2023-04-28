@@ -36,6 +36,7 @@ short puzzle;
 bool detonated = false;
 bool disarmed = false;
 bool won = false;
+bool waiting = true;
 bool vowel = false;
 bool ctrl = false;
 bool alt = false;
@@ -93,6 +94,7 @@ short submission[3] = { -1, -1, -1 };
 
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PIXEL_COUNT, LED_DATA_PIN);
 
+void reset(uint8_t data);
 void strike();
 void promote(Light *light);
 
@@ -116,11 +118,9 @@ void setup()
 
   // generate the question
   randomSeed(analogRead(A5));
-  puzzle = random(24);
 
-  secondHand.setTime(init_times[puzzle][0]);
-  minuteHand.setTime(init_times[puzzle][1]);
-  hourHand.setTime(init_times[puzzle][2]);
+  // reset(0);
+
 }
 
 void loop()
@@ -131,24 +131,7 @@ void loop()
     switch (msg.message)
     {
       case MessageType::Reset:
-        detonated = false;
-        disarmed = false;
-        won = false;
-        puzzle = random(24);
-        vowel = msg.data & SN_CONTAINS_VOWEL;
-        ctrl = msg.data & IND_CTRL;
-        alt = msg.data & IND_ALT;
-        etp = msg.data & IND_ETP;
-        strikes = 0;
-
-        digitalWrite(STATUS_RED, HIGH);
-        digitalWrite(STATUS_GRN, LOW);
-
-        strip.ClearTo(colors[0]);
-
-        secondHand.setTime(init_times[puzzle][0]);
-        minuteHand.setTime(init_times[puzzle][1]);
-        hourHand.setTime(init_times[puzzle][2]);
+        reset(msg.data);
         break;
 
       case MessageType::Time2:
@@ -171,7 +154,20 @@ void loop()
     }
   }
 
-  if (!detonated && !disarmed && !won)
+  if (waiting)
+  {
+    long now = millis();
+    short m = map(now % 1000, 0, 1000, 0, 12);
+    short h = map(now % 12000, 0, 12000, 0, 12);
+    
+    strip.ClearTo(colors[0]);
+    strip.SetPixelColor(h, colors[3]);
+    strip.SetPixelColor(m, colors[2]);
+    // strip.SetPixelColor((i+2) % 12, colors[3]);
+
+    strip.Show();
+  }
+  else if (!detonated && !disarmed && !won)
   {
     strip.ClearTo(colors[0]);
 
@@ -320,6 +316,31 @@ void loop()
   }
 
   strip.Show();
+}
+
+void reset(uint8_t data)
+{
+  detonated = false;
+  disarmed = false;
+  won = false;
+  waiting = false;
+  
+  puzzle = random(24);
+
+  vowel = data & SN_CONTAINS_VOWEL;
+  ctrl = data & IND_CTRL;
+  alt = data & IND_ALT;
+  etp = data & IND_ETP;
+  strikes = 0;
+
+  digitalWrite(STATUS_RED, HIGH);
+  digitalWrite(STATUS_GRN, LOW);
+
+  strip.ClearTo(colors[0]);
+
+  secondHand.setTime(init_times[puzzle][0]);
+  minuteHand.setTime(init_times[puzzle][1]);
+  hourHand.setTime(init_times[puzzle][2]);
 }
 
 void strike()
