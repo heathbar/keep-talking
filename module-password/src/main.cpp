@@ -54,6 +54,8 @@ ChatMessage msg;
 
 bool disarmed = false;
 bool detonated = false;
+bool won = false;
+
 void reset();
 
 void setup()
@@ -90,41 +92,48 @@ void loop()
   if (chat.receive(&msg))
   {
 
-    if (msg.message == MessageType::Reset)
+    switch (msg.message)
     {
-      reset();
-    }
-    else if (msg.message == MessageType::Detonate)
-    {
-      detonated = true;
-      display.displayOn();
-      display.print("UHOH");
-      delay(200);
-      display.displayOff();
-      delay(200);
-      display.displayOn();
-      delay(200);
-      display.displayOff();
-      delay(200);
-      display.displayOn();
-      delay(200);
-      display.displayOff();
-      delay(200);
-      display.print("BOOM");
-      delay(100);
-      display.displayOff();
-      delay(100);
-      display.displayOn();
-      delay(100);
-      display.displayOff();
-      delay(100);
-      display.displayOn();
-      delay(100);
-      display.displayOff();
+      case MessageType::Reset:
+        reset();
+        break;
+    
+      case MessageType::Detonate:
+        detonated = true;
+        display.displayOn();
+        display.print("RUN!");
+        delay(200);
+        display.displayOff();
+        delay(200);
+        display.displayOn();
+        delay(200);
+        display.displayOff();
+        delay(200);
+        display.displayOn();
+        delay(200);
+        display.displayOff();
+        delay(200);
+        display.print("BOOM");
+        delay(100);
+        display.displayOff();
+        delay(100);
+        display.displayOn();
+        delay(100);
+        display.displayOff();
+        delay(100);
+        display.displayOn();
+        delay(100);
+        display.displayOff();
+        break;
+
+      case MessageType::Win:
+        won = true;
+        display.print("NICE");
+        break;
     }
   }
 
-  if (!detonated && !disarmed)
+  if (!detonated && !disarmed && !won)
   {
     char pass[5];
     bool correct = password->eval(pass);
@@ -170,6 +179,8 @@ void reset()
 {
   detonated = false;
   disarmed = false;
+  won = false;
+
   delete password;
   short index = random(27);
   const char **args = database[index];
