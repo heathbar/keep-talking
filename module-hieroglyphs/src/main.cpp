@@ -53,7 +53,7 @@ short solution_scrambled[4];
 short solution_index = 0;
 bool disarmed = false;
 bool detonated = false;
-bool won = false;
+bool won = true;
 long randomSeedAnalog;
 
 void draw(short pos, Glyph glyph, uint16_t color);
@@ -296,4 +296,7 @@ void reset()
   disarmed = false;
   detonated = false;
   won = false;
+
+  digitalWrite(STATUS_RED, LOW);
+  digitalWrite(STATUS_GRN, HIGH);
 }
