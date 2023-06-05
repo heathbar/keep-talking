@@ -1,22 +1,21 @@
 #include <Arduino.h>
 #include <NeoPixelBus.h>
+#include <SPI.h>
 #include <chat.h>
 #include <button.h>
 #include "maze.h"
 
 #define VCC 2
 #define GND 8
-#define STATUS_RED 10
-#define STATUS_GRN 11
-#define RTS 12
-#define CTS 13
+#define STATUS_RED A0
+#define STATUS_GRN A1
+
 #define PIXEL_PIN 3
 #define BRIGHTNESS 5
 
-const uint16_t PixelCount = 64;
+#define COMS_ADDR 2  // address of the I2C slave that handles coms for us
 
-Chat chat(ChatSource::Maze);
-ChatMessage msg;
+const uint16_t PixelCount = 64;
 
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PIXEL_PIN);
 
@@ -44,10 +43,16 @@ bool won = false;
 void reset();
 void draw(Element e);
 void flash(RgbColor c);
+void sendMessage(char c);
 
 void setup()
 {
-  chat.begin();
+
+  Serial.begin(19200);
+
+  SPI.begin();
+  SPI.setClockDivider(SPI_CLOCK_DIV8);
+  digitalWrite(SS,HIGH);
 
   pinMode(VCC, OUTPUT);
   pinMode(GND, OUTPUT);
@@ -55,16 +60,11 @@ void setup()
   pinMode(STATUS_RED, OUTPUT);
   pinMode(STATUS_GRN, OUTPUT);
 
-  pinMode(RTS, INPUT);
-  pinMode(CTS, OUTPUT);
-
   digitalWrite(VCC, HIGH);
   digitalWrite(GND, LOW);
 
   digitalWrite(STATUS_GRN, LOW);
   digitalWrite(STATUS_RED, HIGH);
-
-  digitalWrite(CTS, LOW);
 
   strip.Begin();
   strip.Show();
@@ -78,36 +78,44 @@ void loop()
 {
   strip.ClearTo(black);
 
-  if (digitalRead(RTS) == HIGH)
-  {
-    digitalWrite(CTS, HIGH);
-    
-    // wait for sender to get us some bits
-    delay(5);
-    digitalWrite(CTS, LOW);
+  // ask for messages
+  ChatMessage m;
+  digitalWrite(SS, LOW);
+  int emm = SPI.transfer('m');
+  delay(50);
+  m.sender = SPI.transfer(0);
+  delay(4);
+  m.message = (MessageType)SPI.transfer(0);
+  delay(4);
+  m.data = SPI.transfer(0);
 
-    while (chat.receive(&msg))
+  digitalWrite(SS, HIGH);
+  
+  if (m.sender != 0 || (uint8_t)m.message != 0 || m.data !=0)
+  {  
+    Serial.println(String("emm    : ") + String(emm));
+    Serial.println(String("sender : ") + String(m.sender));
+    Serial.println(String("message: ") + String((byte)m.message));
+    Serial.println(String("data   : ") + String(m.data));
+
+    switch (m.message)
     {
-      switch (msg.message)
-      {
-        case MessageType::Reset:
-          reset();
-          break;
-        case MessageType::Detonate:
-          for (int i = 0; i < 10; i++) {
-            flash(red);
-            delay(50);
-            detonated = true;
-          }
-          break;
+      case MessageType::Reset:
+        reset();
+        break;
+      case MessageType::Detonate:
+        for (int i = 0; i < 10; i++) {
+          flash(red);
+          delay(50);
+          detonated = true;
+        }
+        break;
 
-        case MessageType::Win:
-          won = true;
-          break;
-      }
+      case MessageType::Win:
+        won = true;
+        break;
     }
   }
-
 
   if (!disarmed && !detonated && !won)
   {
@@ -122,7 +130,7 @@ void loop()
       }
       else
       {
-        chat.send(MessageType::Strike);
+        sendMessage('s');
         flash(red);
       }
     }
@@ -135,7 +143,7 @@ void loop()
       }
       else
       {
-        chat.send(MessageType::Strike);
+        sendMessage('s');
         flash(red);
       }
     }
@@ -148,7 +156,7 @@ void loop()
       }
       else
       {
-        chat.send(MessageType::Strike);
+        sendMessage('s');
         flash(red);
       }
     }
@@ -161,7 +169,7 @@ void loop()
       }
       else
       {
-        chat.send(MessageType::Strike);
+        sendMessage('s');
         flash(red);
       }
     }
@@ -171,7 +179,7 @@ void loop()
 
     if (are_same_location(goal, player))
     {
-      chat.send(MessageType::Disarm);
+      sendMessage('d');
 
       digitalWrite(STATUS_GRN, HIGH);
       digitalWrite(STATUS_RED, LOW);
@@ -184,6 +192,7 @@ void loop()
         strip.Show();
         delay(65);
       }
+
     }
   }
 
@@ -244,4 +253,11 @@ void flash(RgbColor c)
   delay(50);
   strip.ClearTo(black);
   strip.Show();
+}
+
+void sendMessage(char c)
+{
+  digitalWrite(SS, LOW);
+  SPI.transfer(c);
+  digitalWrite(SS, HIGH);
 }
