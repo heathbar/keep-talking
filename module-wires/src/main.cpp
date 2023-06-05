@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <patient-chat.h>
+#include <chat.h>
 #include <serial-number-flags.h>
 #include "sensor_group.h"
 #include "wire.h"
@@ -8,19 +8,14 @@
 #define STATUS_RED 12
 #define STATUS_GRN 13
 
-// The next module in the chain is Maze which uses NeoPixelBus which notoriously drops 
-// packets. So we have implemented a RTS/CTS system called PatientChat to make sure 
-// Maze is ready to receive before we send any messages.
-#define RTS 2
-#define CTS 3
-
 bool disarmed = false;
 bool detonated = false;
+bool won = false;
 bool last_digit_odd = false;
 
 SensorGroup sensors;
 
-PatientChat chat(ChatSource::Wires, RTS, CTS);
+Chat chat(ChatSource::Wires);
 ChatMessage msg;
 
 
@@ -44,22 +39,27 @@ void loop()
 
   if (chat.receive(&msg))
   {
-    if (msg.message == MessageType::Reset)
+    switch (msg.message)
     {
-      sensors.init(msg.data & SN_LAST_DIGIT_ODD);
-      detonated = false;
-      disarmed = false;
+      case MessageType::Reset:
+        sensors.init(msg.data & SN_LAST_DIGIT_ODD);
+        detonated = false;
+        disarmed = false;
+        won = false;
 
-      digitalWrite(STATUS_RED, HIGH);
-      digitalWrite(STATUS_GRN, LOW);
-    }
-    else if (msg.message == MessageType::Detonate)
-    {
-      detonated = true;
+        digitalWrite(STATUS_RED, HIGH);
+        digitalWrite(STATUS_GRN, LOW);
+        break;
+      case MessageType::Detonate:
+        detonated = true;
+        break;
+      case MessageType::Win:
+        won = true;
+        break;
     }
   }
 
-  if (!disarmed && !detonated)
+  if (!disarmed && !detonated && !won)
   {
     SensorGroupEvent event = sensors.update();
 
