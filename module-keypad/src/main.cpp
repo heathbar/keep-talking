@@ -78,6 +78,8 @@ short pin_codes[][5] =
   { 1, 9, 3, 7, 4 },
 };
 
+short usedSequences[3] = { -1, -1, -1 };
+
 short stage = INITIAL;
 bool playing = false;
 
@@ -105,13 +107,7 @@ void setup() {
 
   randomSeed(analogRead(A6));
 
-  // Stuff kept starting out not random without this mess...
-  random(10);
-  random(100);
-  random(1000);
-  random(10000);
-
-  reset(false, false);
+  reset(true, false);
 }
 
 
@@ -124,6 +120,8 @@ void loop() {
       case MessageType::Reset:
         bool even = !(msg.data & SN_LAST_DIGIT_ODD);
         bool ctrl = msg.data & IND_CTRL;
+
+        randomSeed(analogRead(A6) * millis() / msg.data);
         reset(even, ctrl);
         break;
       case MessageType::Detonate:
@@ -159,12 +157,19 @@ void loop() {
         }
         else if (response == CORRECT)
         {
-          stage++;
-          playing = true;
+          int r;
+          do
+          {
+            r = random(14);
+          } while (r == usedSequences[0] && r == usedSequences[1]);
+          
+          usedSequences[stage] = r;
 
-          int r = random(14);
           mp.setPhrase(morses[r]);
           pin_seq.terminated(5, pin_codes[r]);
+
+          stage++;
+          playing = true;
         }
       }
       else if (states[i] == RELEASED)
@@ -207,7 +212,12 @@ void loop() {
       digitalWrite(STAGE2_RED, LOW);
       digitalWrite(STAGE3_RED, LOW);
       disarmed = true;
-      delay(250);
+      
+      // new trend, send disarm messages multiple times for increased reliability
+      delay(100);
+      chat.send(MessageType::Disarm);
+      delay(150);
+      chat.send(MessageType::Disarm);
 
       tone1.stop();
       tone2.stop();
