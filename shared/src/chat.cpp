@@ -56,7 +56,7 @@ bool Chat::receive(ChatMessage* message)
 
   if (buf[0] != MESSAGE_HEADER)
   {
-    debug("RECOVER!\n" + String(buf[0]) + String(buf[1]) + String(buf[2]) + String(buf[3]));
+    // debug("RECOVER!\n" + String(buf[0]) + String(buf[1]) + String(buf[2]) + String(buf[3]));
     if (!recover(buf))
     {
       return false;
@@ -130,7 +130,7 @@ bool Chat::handleDebugMessage(ChatMessage *message)
   }
 
   // forward the debug data
-  write(buffer, length);
+  write((uint8_t*)buffer, length);
 
   #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 
