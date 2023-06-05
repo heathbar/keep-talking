@@ -26,8 +26,9 @@ Adafruit_SSD1306 oled = Adafruit_SSD1306(128, 32, &Wire);
 int duration;
 short strikes = 0;
 
-short moduleCount = 6;
-short modulesDisarmed = 0;
+short numModulesToWin = 3;
+short numModulesDisarmed = 0;
+bool disarmedModules[12] = { false, false, false, false, false, false, false, false, false, false, false, false };
 bool noFailMode = false;
 bool indicatorCtrl = 0;
 bool indicatorAlt = 0;
@@ -114,7 +115,7 @@ void setup()
   random(1000);
   random(10000);
 
-  serialNumber = &serialNumbers[random(12)];
+  serialNumber = &serialNumbers[random(32)];
   serialNumber->randomizeIndicators();
 
   oled.begin(SSD1306_SWITCHCAPVCC, 0x3C); // Address 0x3C for 128x32
@@ -195,12 +196,19 @@ void loop()
   {    
     if (msg.message == MessageType::Disarm)
     {
-      modulesDisarmed++;
+      // Due to reliability issues, disarm messages will be sent multiple times. 
+      // We track that here so that each module is counted only once
+      if (!disarmedModules[msg.sender])
+      {
+        disarmedModules[msg.sender] = true;
+        numModulesDisarmed++;
+
+        // Play happy tone
+        tone_blocking(800, 65);
+        tone_blocking(1000, 65);
+        tone_blocking(1300, 100);
+      }
    
-      // Play happy tone
-      tone_blocking(800, 65);
-      tone_blocking(1000, 65);
-      tone_blocking(1300, 100);
     }
     else if (msg.message == MessageType::Strike)
     {
@@ -243,7 +251,7 @@ void loop()
     }
   }
 
-  if (modulesDisarmed == moduleCount)
+  if (numModulesDisarmed == numModulesToWin)
   {
     disarm();
   }
@@ -311,35 +319,35 @@ void setDifficulty(short d)
   {
     case DIFFICULTY_NO_FAIL: 
       duration = 300; // FIVE MINUTES
-      moduleCount = 3;
+      numModulesToWin = 3;
       noFailMode = true;
       oled.println("No Fail Mode...");
       Serial.println("No Fail Mode");
       break;
     case DIFFICULTY_EASY:
       duration = 300; // FIVE MINUTES
-      moduleCount = 3;
+      numModulesToWin = 3;
       noFailMode = false;
       oled.println("Easy Difficulty...");
       Serial.println("Easy Difficulty");
       break;
     case DIFFICULTY_NORMAL:
       duration = 300; // FIVE MINUTES
-      moduleCount = 6;
+      numModulesToWin = 6;
       noFailMode = false;
       oled.println("Normal Difficulty...");
       Serial.println("Normal Difficulty");
       break;
     case DIFFICULTY_HEROIC:
-      duration = 360; // EIGHT MINUTES
-      moduleCount = 9;
+      duration = 480; // EIGHT MINUTES
+      numModulesToWin = 9;
       noFailMode = false;
       oled.println("Heroic Difficulty...");
       Serial.println("Heroic Difficulty");
       break;
     case DIFFICULTY_LEGENDARY:
       duration = 360; // SIX MINUTES
-      moduleCount = 9;
+      numModulesToWin = 9;
       noFailMode = false;
       oled.println("Legendary Difficulty...");
       Serial.println("Legendary Difficulty");

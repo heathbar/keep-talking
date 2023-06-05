@@ -24,6 +24,11 @@ All messages are 4 bytes, with the exception of the Debug message type.
 - 0x05 Clock
 - 0x06 Wires
 - 0x07 Hieroglyphs
+- 0x08 BinaryCounter
+- 0x09 Maze
+- 0x10 Keypad
+- 0x11 Mastermind
+- 0x12 TBD
 
 
 ### Event
@@ -38,6 +43,8 @@ All messages are 4 bytes, with the exception of the Debug message type.
 - 0x07 Time2
 - 0x08 Time3
 - 0x09 Time4
+- 0x10 Win
+- 0x11 Quote
 
 
 ### Reset Flags
