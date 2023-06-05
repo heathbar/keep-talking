@@ -1,4 +1,11 @@
-#define __AVR__ 1 // cheat codes
+// !!! COMPILE/UPLOAD NOTE !!!
+//     This sketch is too big to fit on the arduino.
+//     But what I've been doing is commenting out this line in the shared lib:
+//       debug("RECOVER!\n" + String(buf[0]) + String(buf[1]) + String(buf[2]) + String(buf[3]));
+//     Then it fits. 
+
+// cheat codes to make things work
+#define __AVR__ 1
 #define __AVR_ATmega328P__ 1
 
 #include <Elegoo_GFX.h>    // Core graphics library
@@ -297,6 +304,6 @@ void reset()
   detonated = false;
   won = false;
 
-  digitalWrite(STATUS_RED, LOW);
-  digitalWrite(STATUS_GRN, HIGH);
+  digitalWrite(STATUS_RED, HIGH);
+  digitalWrite(STATUS_GRN, LOW);
 }
