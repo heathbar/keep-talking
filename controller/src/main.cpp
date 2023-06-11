@@ -1,11 +1,11 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <PCM.h>
-#include <Adafruit_SSD1306.h>
 #include <chat.h>
 #include "clock.h"
 #include "sounds.h"
 #include "serial-number.h"
+#include "lcd-helpers.h"
 
 #define STRIKE1 49
 #define STRIKE2 51
@@ -15,13 +15,12 @@
 #define ETP_LED 48
 #define SPEAKER_PIN 10
 #define AUDIO_GND 11
-#define OLED_VCC 13
+#define VCC 13
 
 Chat chat(ChatSource::Main);
 ChatMessage msg;
 
 Clock *clock;
-Adafruit_SSD1306 oled = Adafruit_SSD1306(128, 32, &Wire);
 
 int duration;
 short strikes = 0;
@@ -84,6 +83,9 @@ void setup()
 {
   Serial.begin(115200);
   Serial.println("Booting...");
+
+  Serial2.begin(9600);
+
   chat.begin();
 
   pinMode(STRIKE1, OUTPUT);
@@ -99,8 +101,8 @@ void setup()
   digitalWrite(AUDIO_GND, LOW);
 
   // extra vcc pin
-  pinMode(OLED_VCC, OUTPUT);
-  digitalWrite(OLED_VCC, HIGH);
+  pinMode(VCC, OUTPUT);
+  digitalWrite(VCC, HIGH);
 
   digitalWrite(STRIKE1, LOW);
   digitalWrite(STRIKE2, LOW);
@@ -118,13 +120,10 @@ void setup()
   serialNumber = &serialNumbers[random(32)];
   serialNumber->randomizeIndicators();
 
-  oled.begin(SSD1306_SWITCHCAPVCC, 0x3C); // Address 0x3C for 128x32
-  oled.clearDisplay();
-
-  oled.setTextSize(1);
-  oled.setTextColor(SSD1306_WHITE);
-  oled.setCursor(0,0);
-  oled.println("Configuring Bomb...");
+  clearLCD();
+  selectLineOneLCD();
+  printLCD("Configuring...");
+  selectLineTwoLCD();
   
   for (int i = 0; i < 128; i++)
   {
@@ -132,12 +131,12 @@ void setup()
     {
       tone(SPEAKER_PIN, 523, 150);
     }
-    if (i % 10 == 0 || i % 10 == 1) {
-      continue;
+    
+    if (i % 8 == 0)
+    {
+      writeLCD(255); // all pixels character for the loading bar
     }
-    oled.drawLine(i, 16, i, 64, SSD1306_WHITE);
-    oled.display();
-    delay(15);
+    delay(30);
 
     if (chat.receive(&msg))
     {
@@ -157,17 +156,11 @@ void setup()
     setDifficulty(DIFFICULTY_EASY);
   }
 
-  oled.clearDisplay();
-  oled.setTextSize(1);
-  oled.setTextColor(SSD1306_WHITE);
-  oled.setCursor(0,0);
-  oled.println("Serial Number");
-  oled.println();
-
-  oled.setTextSize(2);
-  oled.setTextColor(SSD1306_WHITE);
-  oled.println(serialNumber->number);
-  oled.display();
+  clearLCD();
+  selectLineOneLCD();
+  printLCD("Serial No");
+  selectLineTwoLCD();
+  printLCD(serialNumber->number);
 
   digitalWrite(CTRL_LED, serialNumber->ctrl);
   digitalWrite(ALT_LED, serialNumber->alt);
@@ -261,36 +254,29 @@ void detonate()
 {
   if (noFailMode)
   {
-    oled.clearDisplay();
-    oled.setCursor(0, 8);
-    oled.setTextSize(2);
-    oled.println("OVERTIME!");
-    oled.display();
+    clearLCD();
+    selectLineOneLCD();
+    printLCD("OVERTIME!");
   }
   else
   {
     chat.send(MessageType::Detonate);
 
-    oled.clearDisplay();
-    oled.setCursor(0, 8);
-    oled.setTextSize(2);
-    oled.println("OH NOES!!!");
-    oled.display();
+    clearLCD();
+    selectLineOneLCD();
+    printLCD("OH NOES!!!");
 
     delay(500);
     tone_blocking(800, 1000);
     delay(500);
-    
-    oled.clearDisplay();
-    oled.setCursor(0, 8);
-    oled.setTextSize(2);
-    oled.println("BOOM!!!");
-    oled.display();
+
+    selectLineTwoLCD();
+    printLCD("BOOM!!!");
 
     startPlayback(SND_EXPLOSION, sizeof(SND_EXPLOSION));
 
     delay(1500);
-    oled.clearDisplay();
+    clearLCD();
 
     // one last refresh to clear out any ms
     // this causes an extra "tick" which seems to not be necessary
@@ -311,9 +297,8 @@ void disarm()
 
 void setDifficulty(short d)
 {
-  oled.fillRect(0, 0, 128, 8, SSD1306_BLACK);
-  oled.display();
-  oled.setCursor(0, 0);
+  clearLCD();
+  selectLineOneLCD();
 
   switch(d)
   {
@@ -321,35 +306,40 @@ void setDifficulty(short d)
       duration = 300; // FIVE MINUTES
       numModulesToWin = 3;
       noFailMode = true;
-      oled.println("No Fail Mode...");
+      printLCD("No Fail Mode...");
       Serial.println("No Fail Mode");
+      selectLineTwoLCD();
       break;
     case DIFFICULTY_EASY:
       duration = 300; // FIVE MINUTES
       numModulesToWin = 3;
       noFailMode = false;
-      oled.println("Easy Difficulty...");
+      printLCD("Easy Mode");
+      selectLineTwoLCD();
       Serial.println("Easy Difficulty");
       break;
     case DIFFICULTY_NORMAL:
       duration = 300; // FIVE MINUTES
       numModulesToWin = 6;
       noFailMode = false;
-      oled.println("Normal Difficulty...");
+      printLCD("Normal Mode");
+      selectLineTwoLCD();
       Serial.println("Normal Difficulty");
       break;
     case DIFFICULTY_HEROIC:
       duration = 480; // EIGHT MINUTES
       numModulesToWin = 9;
       noFailMode = false;
-      oled.println("Heroic Difficulty...");
+      printLCD("Heroic Mode");
+      selectLineTwoLCD();
       Serial.println("Heroic Difficulty");
       break;
     case DIFFICULTY_LEGENDARY:
       duration = 360; // SIX MINUTES
       numModulesToWin = 9;
       noFailMode = false;
-      oled.println("Legendary Difficulty...");
+      printLCD("Legendary Mode");
+      selectLineTwoLCD();
       Serial.println("Legendary Difficulty");
       break;
   }
