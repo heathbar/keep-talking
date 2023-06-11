@@ -1,33 +1,33 @@
 #include "password-slice.h"
 #include <Arduino.h>
 
-PasswordSlice::PasswordSlice(char ans, const char *noise, short btnPin)
+const short SIZE = 6;
+
+void PasswordSlice::init(char ans, char noise[], short btnPin)
 {
   answer = ans;
   index = 0;
-  size = strlen(noise) + 1; // add an extra spot for the correct answer
-  list = (char *)malloc(size + 1);  // add an extra spot for the null
-  
-  list[0] = ans;
-  strcpy(&list[1], noise);
 
+  chars[0] = ans;
+  strncpy(&chars[1], noise, 6);
+  
   btn = Button(btnPin);
 }
 
 void PasswordSlice::mix()
 {
-  // shuffle the character list
-  for (short i = 0; i < size - 1; i++) {
-    short j = random() % size;
-    char temp = list[j];
-    list[j] = list[i];
-    list[i] = temp;
+  // shuffle the character chars
+  for (short i = 0; i < SIZE - 1; i++) {
+    short j = random() % SIZE;
+    char temp = chars[j];
+    chars[j] = chars[i];
+    chars[i] = temp;
   }
 }
 void PasswordSlice::next() 
 {
   index++;
-  if (index >= size) {
+  if (index >= SIZE) {
     index = 0;
   }
 }
@@ -35,7 +35,7 @@ void PasswordSlice::prev()
 {
   index--;
   if (index < 0) {
-    index = size - 1;
+    index = SIZE - 1;
   }
 }
 
@@ -47,10 +47,5 @@ char PasswordSlice::eval()
   if (btn.isPressed()) {
     prev();
   }
-  return list[index];
-}
-
-PasswordSlice::~PasswordSlice()
-{
-  free(list);
+  return chars[index];
 }

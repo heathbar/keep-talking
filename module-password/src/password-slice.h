@@ -7,18 +7,15 @@
 class PasswordSlice {
   private:
       char answer;
-      
       short index;
-      short size;
       Button btn;
 
   public:
-    char* list;
-    PasswordSlice(char answer, const char *noise, short btnPin);
+    char chars[7];
+    void init(char answer, char noise[], short btnPin);
     void mix();
     void next();
     void prev();
     char eval();
-    ~PasswordSlice();
 };
 #endif

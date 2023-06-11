@@ -1,9 +1,10 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SparkFun_Alphanumeric_Display.h>
-#include "password-component.h"
+#include "password-manager.h"
 #include <chat.h>
 #include <button.h>
+#include <serial-number-flags.h>
 
 const short ledPin = 2;
 const short gndPin = 7;
@@ -14,40 +15,8 @@ const short disarmedPin = A1;
 
 HT16K33 display;
 
-PasswordComponent *password;
+PasswordManager password;
 Button submit(btnPin);
-
-const char *database[][5] = {
-    {"BACK", "PJMET", "ELYHR", "SNPIB", "GCDWV"},
-    {"BOMB", "DLKFA", "ZGICH", "LADNS", "FRPTJ"},
-    {"CAMP", "LPDSO", "UZQRH", "OQPLK", "TAJCH"},
-    {"CENT", "LPBSO", "UZQRH", "OQPLK", "FAJCH"},
-    {"CHIP", "NAMES", "AEOUV", "BWSOK", "ERSTF"},
-    {"DENT", "AEHWN", "ZABLV", "JPMBC", "ATLDQ"},
-    {"DOME", "ROMAN", "ACFHU", "NIJKV", "FLSCD"},
-    {"EZRA", "SDKUA", "WAJOK", "TSMEX", "YFPMB"},
-    {"FIRE", "TIHGJ", "GAPUD", "VEYCL", "PTXSN"},
-    {"GAME", "JOQDT", "IUSPR", "NBSPX", "ABCDF"},
-    {"GOLF", "PIELX", "GCHIR", "NMAID", "WATER"},
-    {"GONE", "HSYOK", "EMTZS", "BIWPG", "ASCIT"},
-    {"HIGH", "STWAU", "DHOFL", "FHIJK", "OMBAN"},
-    {"HEAR", "YNAFJ", "KRONZ", "CLIQU", "HMAET"},
-    {"HELP", "FNIRT", "OSJDW", "HKMPR", "UWEBT"},
-    {"LAMB", "KODER", "TUVWB", "SNACY", "CDEFG"},
-    {"LEAP", "MOREF", "YTCKV", "BARED", "COGAN"},
-    {"MELT", "SNACK", "LUNCH", "BFAST", "DINER"},
-    {"MINE", "SLXOU", "UVRYC", "AMPIJ", "LBRAD"},
-    {"MINT", "GOCUJ", "ALDBN", "ERXVI", "QBMSL"},
-    {"NEXT", "TOADZ", "IPSVK", "JVLCR", "BURNY"},
-    {"PALM", "TRIMO", "ECUWF", "JBDYI", "KUFPS"},
-    {"PASS", "JIMBO", "OIKWD", "FLOTE", "SCOPY"},
-    {"PREY", "SHOEL", "HXFBI", "AUOPT", "VFNWJ"},
-    {"RAMP", "LEGUF", "HIYHR", "KNOCV", "IDCKA"},
-    {"SEND", "PGOAT", "DOIBQ", "UVRAY", "BIPMO"},
-    {"SHIP", "FOUNT", "XLEKG", "BLAMP", "SHADE"},
-    {"SIDE", "MATEY", "CWONG", "DIRTY", "LOQPS"},
-    {"TENT", "BIGXL", "TINYS", "AVCLB", "DINOZ"},
-    {"XRAY", "YZQGB", "OHSIK", "UNDER", "ABOVE"}};
 
 Chat chat(ChatSource::Password);
 ChatMessage msg;
@@ -56,7 +25,7 @@ bool disarmed = false;
 bool detonated = false;
 bool won = false;
 
-void reset();
+void reset(bool alt);
 
 void setup()
 {
@@ -81,9 +50,7 @@ void setup()
   digitalWrite(armedPin, HIGH);
   digitalWrite(disarmedPin, LOW);
 
-  short index = random(27);
-  const char **args = database[index];
-  password = new PasswordComponent(args);
+  // reset(false);
 
 }
 
@@ -95,13 +62,14 @@ void loop()
     switch (msg.message)
     {
       case MessageType::Reset:
-        reset();
+        bool alt = msg.data & IND_ALT;
+        reset(alt);
         break;
     
       case MessageType::Detonate:
         detonated = true;
         display.displayOn();
-        display.print("RUN!");
+        display.print("RUN ");
         delay(200);
         display.displayOff();
         delay(200);
@@ -136,16 +104,14 @@ void loop()
   if (!detonated && !disarmed && !won)
   {
     char pass[5];
-    bool correct = password->eval(pass);
+    bool correct = password.eval(pass);
     display.print(pass);
 
     if (submit.isPressed())
     {
       if (correct)
       {
-        // Serial.println("Disarmed!");
         chat.send(MessageType::Disarm);
-        delete password;
 
         digitalWrite(armedPin, LOW);
         digitalWrite(disarmedPin, HIGH);
@@ -170,26 +136,23 @@ void loop()
         chat.send(MessageType::Strike);
       }
     }
-  }
-
+  }  
 }
 
 
-void reset()
+void reset(bool alt)
 {
   detonated = false;
   disarmed = false;
   won = false;
 
-  delete password;
-  short index = random(27);
-  const char **args = database[index];
-  password = new PasswordComponent(args);
-  password->mix();
+  short index = random(30);
+  password.load(index, alt);
+  password.mix();
 
   char pass[5];
-  while (password->eval(pass))
+  while (password.eval(pass))
   {
-    password->mix();
+    password.mix();
   }
 }
