@@ -16,7 +16,7 @@ enum class ChatSource {
   Maze,
   Keypad,
   Mastermind,
-  TBD,
+  Memory,
   LAST_VALUE
 };
 
