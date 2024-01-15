@@ -38,6 +38,7 @@ Button btn(SW_PIN);
 bool disarmed = false;
 bool detonated = false;
 bool won = false;
+bool waiting = true;
 
 
 void reset();
@@ -66,6 +67,8 @@ void setup() {
 
   randomSeed(analogRead(A4));
 
+  white.animate();
+
   reset();
 }
 
@@ -86,7 +89,7 @@ void loop() {
     }
   }
 
-  if (!disarmed && !detonated && !won)
+  if (!disarmed && !detonated && !won && !waiting)
   {
     selectedDigit = readSelected();
 
@@ -102,9 +105,12 @@ void loop() {
 
         if (stage == 6)
         {
+          chat.send(MessageType::Disarm);
           disarmed = true;
           white.clear();
           blue.clear();
+          delay(50);
+          chat.send(MessageType::Disarm);
           return;
         }
         else
@@ -115,6 +121,7 @@ void loop() {
       }
       else
       {
+        chat.send(MessageType::Strike);
         reset();
       }
     }
@@ -127,6 +134,7 @@ void reset()
   disarmed = false;
   detonated = false;
   won = false;
+  waiting = false;
 
   stage = 1;
 
@@ -163,28 +171,42 @@ void display()
   {
     digitalWrite(LATCH_PIN, LOW);
 
-    // Stage LEDs
-    byte leds = disarmed ? 2 : 4;
-    for (short j = 1; j <= stage; j++)
+    if (waiting)
     {
-      if (j != stage || millis() % 600 > 300)
-      {
-        leds += (1 << (j+2));
-      }
-    }
-    shiftOut(leds);
-    
-    // Blue digit
-    shiftOut(blue.display());
+      // Stage LEDs
+      shiftOut(4);
 
-    // Options Digits
-    if (i == selectedDigit && millis() % 400 > 200)
-    {
-      shiftOut(0);
+      // Blue digit
+      shiftOut(255);
+
+      // White Digits
+      shiftOut(white.display(i));
     }
     else
     {
-      shiftOut(white.display(i));
+      // Stage LEDs
+      byte leds = disarmed ? 2 : 4;
+      for (short j = 1; j <= stage; j++)
+      {
+        if (j != stage || millis() % 600 > 300)
+        {
+          leds += (1 << (j+2));
+        }
+      }
+      shiftOut(leds);
+      
+      // Blue digit
+      shiftOut(blue.display());
+
+      // White Digits
+      if (i == selectedDigit && millis() % 400 > 200)
+      {
+        shiftOut(0);
+      }
+      else
+      {
+        shiftOut(white.display(i));
+      }
     }
 
     digitalWrite(LATCH_PIN, HIGH);
@@ -197,10 +219,6 @@ void display()
 
 bool check(short stage, byte blue, short choice)
 {
-  Serial.println(String("Blue = ") + blue);
-  Serial.println(String("choice = ") + choice);
-  
-
   switch (stage)
   {
     case 1:
@@ -256,7 +274,6 @@ bool check(short stage, byte blue, short choice)
       }
       break;
     case 5:
-      Serial.println("---");
       switch (blue)
       {
         case 1:

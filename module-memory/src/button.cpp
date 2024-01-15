@@ -8,35 +8,35 @@ Button::Button()
   // this is mostly pointless
 }
 
-Button::Button(short pin)
+Button::Button(short p)
 {
-  this->pin = pin;
-  this->state = false;
-  this->lastState = false;
-  this->lastDebounceTime = 0;
+  pin = p;
   pinMode(pin, INPUT_PULLUP);
+
+  lastDebounceTime = 0;
+  state = lastState = digitalRead(pin);
 }
 
 ButtonState Button::refresh()
 {
-  this->isPressed = false;
-  this->isReleased = false;
+  isPressed = false;
+  isReleased = false;
 
-  bool reading = digitalRead(this->pin);
-  if (reading != this->lastState)
+  bool reading = digitalRead(pin);
+  if (reading != lastState)
   {
-    this->lastDebounceTime = millis();
+    lastDebounceTime = millis();
   }
   
-  this->lastState = reading;
+  lastState = reading;
 
-  if ((millis() - this->lastDebounceTime) > debounceTime)
+  if ((millis() - lastDebounceTime) > debounceTime)
   {
-    if (reading != this->state)
+    if (reading != state)
     {
-      this->state = reading;
+      state = reading;
 
-      if (this->state == LOW)
+      if (state == LOW)
       {
         return PRESSED;
       }

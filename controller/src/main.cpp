@@ -27,7 +27,7 @@ short strikes = 0;
 
 short numModulesToWin = 3;
 short numModulesDisarmed = 0;
-bool disarmedModules[12] = { false, false, false, false, false, false, false, false, false, false, false, false };
+bool disarmedModules[13] = { false, false, false, false, false, false, false, false, false, false, false, false, false };
 bool noFailMode = false;
 bool indicatorCtrl = 0;
 bool indicatorAlt = 0;

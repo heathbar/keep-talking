@@ -43,7 +43,7 @@ bool alt = false;
 bool etp = false;
 
 short strikes = 0;
-short clock_minutes = -1;
+short clock_minutes = 10;
 
 RgbColor colors[4] = {
     RgbColor(0),

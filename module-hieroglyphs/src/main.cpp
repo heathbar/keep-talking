@@ -13,7 +13,7 @@
 #include <button.h>
 #include <chat.h>
 #include "glyph.h"
-#include "quotes.h"
+#include "rando.h"
 
 
 // #define LCD_CS A3 // Chip Select
@@ -61,14 +61,11 @@ short solution_index = 0;
 bool disarmed = false;
 bool detonated = false;
 bool won = true;
-long randomSeedAnalog;
 
 void draw(short pos, Glyph glyph, uint16_t color);
 void scramble(short *input, short *output);
 void paint_indicator(short i, uint16_t color);
 void reset();
-void showQuote(short x);
-
 
 void setup(void) {
   chat.begin();
@@ -76,14 +73,15 @@ void setup(void) {
   tft.begin(0x9341); // 0x9341 identifies the make/model of the LCD panel
   tft.fillScreen(BLACK);
 
-  pinMode(A5, INPUT);
-  randomSeedAnalog = analogRead(A5);
+  randomSeed(getTrueRotateRandomByte());
 
   pinMode(STATUS_RED, OUTPUT);
   pinMode(STATUS_GRN, OUTPUT);
 
   digitalWrite(STATUS_RED, HIGH);
   digitalWrite(STATUS_GRN, LOW);
+
+  tft.fillScreen(BLACK);
 }
 
 
@@ -93,7 +91,6 @@ void loop(void) {
   {
     switch (msg.message) {
       case MessageType::Reset:
-        randomSeed(randomSeedAnalog * msg.data);
         reset();
         break;
 
@@ -273,8 +270,9 @@ void reset()
   tft.fillScreen(BLACK);
 
   // select a random group
-  Glyph *group = glyph_groups[random(6)];
-  
+  byte r = random(6);
+  Glyph *group = glyph_groups[r];
+
   // extract 4 random glyphs (in order) from the 7 in the group
   const short n = 7;
   const short m = 4;
