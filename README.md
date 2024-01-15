@@ -2,6 +2,7 @@
 
 This project is an arduino-based, real-world version of the video game "Keep Talking and Nobody Explodes".
 
+{% include youtube.html id="scMQZVPicUo" %}
 
 ## Serial Protocol
 
